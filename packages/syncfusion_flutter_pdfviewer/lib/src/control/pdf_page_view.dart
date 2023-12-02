@@ -224,6 +224,7 @@ class PdfPageViewState extends State<PdfPageView> {
 
   /// Form field widgets
   final List<Widget> _formFields = <Widget>[];
+  int directionFactor = 1;
 
   @override
   void initState() {
@@ -234,6 +235,8 @@ class PdfPageViewState extends State<PdfPageView> {
       });
     }
     super.initState();
+
+    directionFactor = widget.textDirection == TextDirection.ltr ? 1 : -1;
   }
 
   @override
@@ -473,10 +476,18 @@ class PdfPageViewState extends State<PdfPageView> {
                             .jumpToPage(widget.pdfViewerController.pageCount);
                       } else if (event.logicalKey ==
                           LogicalKeyboardKey.arrowRight) {
-                        widget.pdfViewerController.nextPage();
+                        if (directionFactor == 1) {
+                          widget.pdfViewerController.nextPage();
+                        } else {
+                          widget.pdfViewerController.previousPage();
+                        }
                       } else if (event.logicalKey ==
                           LogicalKeyboardKey.arrowLeft) {
-                        widget.pdfViewerController.previousPage();
+                        if (directionFactor == 1) {
+                          widget.pdfViewerController.previousPage();
+                        } else {
+                          widget.pdfViewerController.nextPage();
+                        }
                       }
                     }
                     if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
