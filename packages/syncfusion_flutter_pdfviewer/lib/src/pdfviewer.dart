@@ -13,6 +13,7 @@
 /// * [Knowledge base](https://www.syncfusion.com/kb/flutter)
 // ignore_for_file: avoid_setters_without_getters, use_setters_to_change_properties
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
@@ -1065,6 +1066,9 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
   int _tappedPageNumber = -1;
   Offset _tappedPagePosition = const Offset(-1, -1);
   bool _canInvokeOnTap = true;
+  Offset _pagePointerDownPosition = Offset.zero;
+  Duration _pagePointerDownTimeStamp = Duration.zero;
+  bool _isDoubleTapped = false;
 
   /// PdfViewer theme data.
   SfPdfViewerThemeData? _pdfViewerThemeData;
@@ -1390,7 +1394,7 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
       }
 
       // Retrieve the signature field details
-      if (field is PdfSignatureField) {
+      if (field is PdfSignatureField && field.signature == null) {
         final PdfSignatureFormFieldHelper helper = PdfSignatureFormFieldHelper(
             field, pageIndex,
             onValueChanged: _formFieldValueChanged,
@@ -1479,7 +1483,7 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
           if (!formField.readOnly) {
             final String selectedItem = field.selectedIndex != -1
                 ? field.items[field.selectedIndex].text
-                : field.items[0].text;
+                : '';
 
             (PdfFormFieldHelper.getHelper(formField)
                     as PdfComboBoxFormFieldHelper)
@@ -1493,7 +1497,7 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
           if (!formField.readOnly) {
             final String selectedItem = field.selectedIndex != -1
                 ? field.items[field.selectedIndex].value
-                : field.items[0].value;
+                : '';
 
             (PdfFormFieldHelper.getHelper(formField) as PdfRadioFormFieldHelper)
                 .setRadioButtonValue(selectedItem);
@@ -1554,7 +1558,7 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
                 PdfBitmap(bitmapBytes),
                 Rect.fromLTWH(helper.bounds.left, helper.bounds.top,
                     helper.bounds.width, helper.bounds.height));
-            helper.pdfSignatureField.flatten();
+            helper.pdfField.form!.fields.remove(helper.pdfSignatureField);
           }
         }
       }
@@ -1590,7 +1594,8 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
           _performTextExtraction();
         }
       }
-      final int pageCount = await _plugin.initializePdfRenderer(_pdfBytes);
+      final int pageCount = await _plugin
+          .initializePdfRenderer(_renderDigitalSignatures() ?? _pdfBytes);
       _pdfViewerController._pageCount = pageCount;
       if (pageCount > 0) {
         _pdfViewerController._pageNumber = 1;
@@ -1667,6 +1672,30 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
     } finally {
       _checkMount();
     }
+  }
+
+  /// Render and flatten digital signatures in the PDF document.
+  Uint8List? _renderDigitalSignatures() {
+    if (_document!.form.fields.count != 0) {
+      final PdfDocument pdfDocument = PdfDocument(inputBytes: _pdfBytes);
+      bool isDigitalSignature = false;
+      Uint8List? digitalSignatureBytes;
+
+      /// Check if the PDF document has a signature field.
+      for (int i = 0; i < pdfDocument.form.fields.count; i++) {
+        final PdfField field = pdfDocument.form.fields[i];
+        if (field is PdfSignatureField && field.signature != null) {
+          field.flatten();
+          isDigitalSignature = true;
+        }
+      }
+      if (isDigitalSignature) {
+        digitalSignatureBytes = Uint8List.fromList(pdfDocument.saveSync());
+      }
+      pdfDocument.dispose();
+      return digitalSignatureBytes;
+    }
+    return null;
   }
 
   /// Perform text extraction for mobile, windows and macOS platforms.
@@ -2893,11 +2922,9 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
 
   void _handlePdfPagePointerDown(PointerDownEvent details) {
     _isPdfPageTapped = true;
-    _canInvokeOnTap = true;
   }
 
   void _handlePdfPagePointerMove(PointerMoveEvent details) {
-    _canInvokeOnTap &= details.delta == Offset.zero;
     if (details.kind == PointerDeviceKind.touch && kIsDesktop) {
       setState(() {
         _isScaleEnabled = true;
@@ -2926,6 +2953,22 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
 
   void _handlePointerDown(PointerDownEvent event) {
     _canInvokeOnTap = true;
+    if (_pagePointerDownTimeStamp != Duration.zero &&
+        event.timeStamp - _pagePointerDownTimeStamp < kDoubleTapTimeout) {
+      final Offset draggedDistance =
+          event.localPosition - _pagePointerDownPosition;
+      if (_pagePointerDownPosition != Offset.zero &&
+          draggedDistance.dx.abs() < kDoubleTapSlop &&
+          draggedDistance.dy.abs() < kDoubleTapSlop) {
+        _isDoubleTapped = true;
+      } else {
+        _isDoubleTapped = false;
+      }
+    } else {
+      _isDoubleTapped = false;
+    }
+    _pagePointerDownPosition = event.localPosition;
+    _pagePointerDownTimeStamp = event.timeStamp;
     if (!_isPdfPageTapped) {
       _pdfPagesKey[_pdfViewerController.pageNumber]
           ?.currentState
@@ -2941,8 +2984,6 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
             focusNode.rect.contains(event.position)) {
           focusNode.requestFocus();
           isTextFormFieldFocused = true;
-        } else {
-          focusNode.unfocus();
         }
       }
     }
@@ -2955,7 +2996,15 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
   }
 
   void _handlePointerMove(PointerMoveEvent event) {
-    _canInvokeOnTap &= event.delta == Offset.zero;
+    final Offset draggedDistance =
+        event.localPosition - _pagePointerDownPosition;
+    if (event.kind == PointerDeviceKind.touch) {
+      _canInvokeOnTap &= draggedDistance.dx.abs() < kTouchSlop &&
+          draggedDistance.dy.abs() < kTouchSlop;
+    } else {
+      _canInvokeOnTap &= draggedDistance.dx.abs() < kPrecisePointerHitSlop &&
+          draggedDistance.dy.abs() < kPrecisePointerHitSlop;
+    }
     if (widget.interactionMode == PdfInteractionMode.pan) {
       _cursor = SystemMouseCursors.grabbing;
     }
@@ -2973,15 +3022,42 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
   }
 
   void _handlePointerUp(PointerUpEvent details) {
-    if (_canInvokeOnTap && !isBookmarkViewOpen) {
-      if (widget.onTap != null) {
-        widget.onTap!(PdfGestureDetails(
-            _tappedPageNumber, details.localPosition, _tappedPagePosition));
-      }
+    _canInvokeOnTap &=
+        details.timeStamp - _pagePointerDownTimeStamp < kLongPressTimeout;
+    bool isSlopDistanceExceeded = false;
+    if (details.kind == PointerDeviceKind.touch) {
+      isSlopDistanceExceeded = kTouchSlop >
+              (details.localPosition.dx - _pagePointerDownPosition.dx).abs() &&
+          kTouchSlop >
+              (details.localPosition.dy - _pagePointerDownPosition.dy).abs();
+    } else {
+      isSlopDistanceExceeded = kPrecisePointerHitSlop >
+              (details.localPosition.dx - _pagePointerDownPosition.dx).abs() &&
+          kPrecisePointerHitSlop >
+              (details.localPosition.dy - _pagePointerDownPosition.dy).abs();
     }
-    _canInvokeOnTap = true;
-    _tappedPageNumber = -1;
-    _tappedPagePosition = const Offset(-1, -1);
+    final bool isLongPressed =
+        (details.timeStamp - _pagePointerDownTimeStamp > kLongPressTimeout) &&
+            isSlopDistanceExceeded;
+    Timer(kDoubleTapTimeout, () {
+      if (!_isDoubleTapped && _canInvokeOnTap && !isBookmarkViewOpen) {
+        if (widget.onTap != null) {
+          widget.onTap!(PdfGestureDetails(
+              _tappedPageNumber, details.localPosition, _tappedPagePosition));
+        }
+      }
+      for (final FocusNode focusNode in _textBoxFocusNodes) {
+        if (focusNode.parent != null &&
+            !focusNode.rect.contains(details.position)) {
+          if ((!_isDoubleTapped && _canInvokeOnTap) || isLongPressed) {
+            focusNode.unfocus();
+          }
+        }
+      }
+      _tappedPageNumber = -1;
+      _tappedPagePosition = const Offset(-1, -1);
+    });
+
     _isPdfPageTapped = false;
     if (widget.interactionMode == PdfInteractionMode.pan) {
       _cursor = SystemMouseCursors.grab;
@@ -3708,8 +3784,10 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
       }
     } else if (property == 'importFormData') {
       if (_document != null) {
-        _document!.form.importData(_pdfViewerController._importedFormDataBytes,
-            _pdfViewerController._importDataFormat);
+        _document!.form.importData(
+            _pdfViewerController._importedFormDataBytes,
+            _pdfViewerController._importDataFormat,
+            _pdfViewerController._continueImportOnError);
         setState(() {
           _importFormFieldData();
         });
@@ -4270,6 +4348,9 @@ class PdfViewerController extends ChangeNotifier with _ValueChangeNotifier {
   /// Flatten option
   PdfFlattenOption _flattenOption = PdfFlattenOption.none;
 
+  /// Continue the form data import on error
+  bool _continueImportOnError = false;
+
   /// PdfBookmark instance
   PdfBookmark? _pdfBookmark;
 
@@ -4575,9 +4656,14 @@ class PdfViewerController extends ChangeNotifier with _ValueChangeNotifier {
   /// * inputBytes – _required_ – Specifies the bytes of the form data.
   /// * dataFormat – _required_ – Defines the constants that specify the format
   /// of importing form data.
-  void importFormData(List<int> inputBytes, DataFormat dataFormat) {
+  /// * continueImportOnError - _optional_ - Indicates whether the
+  /// `SfPdfViewer` should continue to import the form data even if any of them
+  /// has an error.
+  void importFormData(List<int> inputBytes, DataFormat dataFormat,
+      [bool continueImportOnError = false]) {
     _importedFormDataBytes = inputBytes;
     _importDataFormat = dataFormat;
+    _continueImportOnError = continueImportOnError;
     _notifyPropertyChangedListeners(property: 'importFormData');
   }
 

@@ -279,23 +279,15 @@ class PdfScrollableState extends State<PdfScrollable> {
             (kIsDesktop && widget.scaleEnabled))) {
       widget.pdfViewerController.zoomLevel = _currentScale!;
     }
-    if ((kIsDesktop &&
-            !widget.isMobileWebView &&
-            widget.scrollDirection == PdfScrollDirection.vertical &&
-            widget.maxPdfPageWidth * widget.pdfViewerController.zoomLevel <
-                widget.viewportDimension.width) ||
-        (widget.scrollDirection == PdfScrollDirection.horizontal &&
-            widget.viewportDimension.width.round() >
-                (totalPdfPageWidth * widget.pdfViewerController.zoomLevel)
-                    .round())) {
+    if (widget.scrollDirection == PdfScrollDirection.horizontal &&
+        widget.viewportDimension.width.round() >
+            (totalPdfPageWidth * widget.pdfViewerController.zoomLevel)
+                .round()) {
       _transformationController.value.translate(currentOffset.dx);
       _isOverFlowed = false;
     } else {
-      if ((kIsDesktop &&
-              !widget.isMobileWebView &&
-              widget.scrollDirection == PdfScrollDirection.vertical) ||
-          (widget.scrollDirection == PdfScrollDirection.horizontal &&
-              totalPdfPageWidth < widget.viewportDimension.width)) {
+      if (widget.scrollDirection == PdfScrollDirection.horizontal &&
+          totalPdfPageWidth < widget.viewportDimension.width) {
         /// Invoked when pdf pages width greater viewport width
         if (_isOverFlowed == false) {
           _transformationController.value.translate(currentOffset.dx);

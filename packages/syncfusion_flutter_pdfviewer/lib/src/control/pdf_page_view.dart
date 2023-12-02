@@ -324,14 +324,12 @@ class PdfPageViewState extends State<PdfPageView> {
       final bool isRotatedTo90or270 =
           rotatedAngle == PdfPageRotateAngle.rotateAngle90 ||
               rotatedAngle == PdfPageRotateAngle.rotateAngle270;
-      final Size originalPageSize = widget
-          .pdfDocument!.pages[widget.pdfViewerController.pageNumber - 1].size;
+      final Size originalPageSize =
+          widget.pdfDocument!.pages[widget.pageIndex].size;
       _heightPercentage = (isRotatedTo90or270
               ? originalPageSize.width
               : originalPageSize.height) /
-          widget
-              .pdfPages[widget.pdfViewerController.pageNumber]!.pageSize.height;
-
+          widget.pdfPages[widget.pageIndex + 1]!.pageSize.height;
       final Widget canvasContainer = Container(
           height: isRotatedTo90or270 ? widget.width : widget.height,
           width: isRotatedTo90or270 ? widget.height : widget.width,
@@ -567,11 +565,23 @@ class PdfPageViewState extends State<PdfPageView> {
                         child: canvasContainer)
                     : canvasContainer,
               ));
+
+      Widget? formFieldContainer;
+      if (_formFields.isNotEmpty) {
+        formFieldContainer = RotatedBox(
+          quarterTurns: quarterTurns,
+          child: SizedBox(
+            height: isRotatedTo90or270 ? widget.width : widget.height,
+            width: isRotatedTo90or270 ? widget.height : widget.width,
+            child: Stack(children: _formFields),
+          ),
+        );
+      }
+
       return Stack(children: <Widget>[
         pdfPage,
         canvas,
-        if (_formFields.isNotEmpty)
-          for (final Widget formField in _formFields) formField,
+        if (formFieldContainer != null) formFieldContainer,
       ]);
     } else {
       bool isVisible;
@@ -695,7 +705,7 @@ class PdfPageViewState extends State<PdfPageView> {
   }
 
   void _onPageTapped(Offset position) {
-    // Tranform the page coordinates from calculated page size to original page size.
+    // Transform the page coordinates from calculated page size to original page size.
     final double x = position.dx * _heightPercentage;
     final double y = position.dy * _heightPercentage;
     widget.onTap(Offset(x, y), widget.pageIndex);

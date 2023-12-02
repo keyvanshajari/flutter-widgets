@@ -147,6 +147,13 @@ class PdfSignatureFormFieldHelper extends PdfFormFieldHelper {
             heightPercentage: heightPercentage,
             signature: signatureFormField.signature,
             readOnly: signatureFormField.readOnly,
+            fillColor: pdfSignatureField.backColor.isEmpty
+                ? const Color.fromARGB(255, 221, 228, 255)
+                : Color.fromRGBO(
+                    pdfSignatureField.backColor.r,
+                    pdfSignatureField.backColor.g,
+                    pdfSignatureField.backColor.b,
+                    1),
             onValueChanged: invokeValueChanged,
             onSignatureFieldTapDown: (TapDownDetails details) {
               if (signatureFormField.readOnly) {
@@ -173,6 +180,7 @@ class PdfSignature extends StatefulWidget {
       required this.heightPercentage,
       this.signature,
       this.readOnly = false,
+      required this.fillColor,
       this.onValueChanged,
       required this.onSignatureFieldTapUp,
       required this.onSignatureFieldTapDown,
@@ -189,6 +197,9 @@ class PdfSignature extends StatefulWidget {
 
   /// Signature field read only.
   final bool readOnly;
+
+  /// Signature field fill color.
+  final Color fillColor;
 
   /// Signature field value changed callback.
   final ValueChanged<Uint8List?>? onValueChanged;
@@ -212,7 +223,7 @@ class _PdfSignatureState extends State<PdfSignature> {
       child: Container(
         height: widget.bounds.height,
         width: widget.bounds.width,
-        color: const Color.fromARGB(255, 221, 228, 255),
+        color: widget.fillColor,
         child: widget.signature != null
             ? Image.memory(widget.signature!)
             : Container(),

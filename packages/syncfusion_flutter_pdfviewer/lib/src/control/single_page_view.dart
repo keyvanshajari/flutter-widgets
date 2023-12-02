@@ -786,10 +786,10 @@ class SinglePageViewState extends State<SinglePageView> {
       if ((kIsDesktop && !widget.isMobileWebView) ||
           (widget.pdfPages[widget.pdfViewerController.pageNumber]!.pageSize
                       .width *
-                  currentZoomLevel <
+                  zoomLevel <
               widget.viewportDimension.width)) {
         setState(() {
-          _transformationController.value.translate(previousOffset.dx,
+          _transformationController.value.translate(currentOffset.dx,
               currentOffset.dy / widget.pdfViewerController.zoomLevel);
         });
       } else {
