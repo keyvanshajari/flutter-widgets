@@ -236,6 +236,7 @@ class PdfScrollableState extends State<PdfScrollable> {
     currentOffset = _transformationController.toScene(Offset.zero);
     _currentScale = _transformationController.value.getMaxScaleOnAxis();
     widget.onPdfOffsetChanged!.call(currentOffset);
+    setState(() {});
     if (details.scale <= 1) {
       if (kIsDesktop && !widget.isMobileWebView) {
         if (widget.viewportDimension.width.round() ==
@@ -376,6 +377,7 @@ class PdfScrollableState extends State<PdfScrollable> {
           previousOffset.dx - offset.dx, previousOffset.dy - offset.dy);
       widget.onPdfOffsetChanged!
           .call(_transformationController.toScene(Offset.zero));
+      setState(() {});
     }
   }
 
@@ -398,6 +400,7 @@ class PdfScrollableState extends State<PdfScrollable> {
         previousOffset.dx - offset.dx, previousOffset.dy - offset.dy);
     widget.onPdfOffsetChanged!
         .call(_transformationController.toScene(Offset.zero));
+    setState(() {});
   }
 
   /// Force the jump without restriction

@@ -28,7 +28,12 @@ import 'package:syncfusion_flutter_core/localizations.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
+import 'annotation/annotation.dart';
+import 'annotation/annotation_settings.dart';
+import 'annotation/text_markup.dart';
 import 'bookmark/bookmark_view.dart';
+import 'change_tracker/change_command.dart';
+import 'change_tracker/change_tracker.dart';
 import 'common/pdf_provider.dart';
 import 'common/pdfviewer_helper.dart';
 import 'common/pdfviewer_plugin.dart';
@@ -39,6 +44,7 @@ import 'control/pdf_scrollable.dart';
 import 'control/pdftextline.dart';
 import 'control/pdfviewer_callback_details.dart';
 import 'control/single_page_view.dart';
+import 'control/text_selection_menu.dart';
 import 'form_fields/pdf_checkbox.dart';
 import 'form_fields/pdf_combo_box.dart';
 import 'form_fields/pdf_form_field.dart';
@@ -82,6 +88,9 @@ typedef PdfFormFieldValueChangedCallback = void Function(
 /// Signature for [SfPdfViewer.onFormFieldFocusChange] callback.
 typedef PdfFormFieldFocusChangeCallback = void Function(
     PdfFormFieldFocusChangeDetails details);
+
+/// Signature for [SfPdfViewer.onAnnotationAdded], [SfPdfViewer.onAnnotationSelected], [SfPdfViewer.onAnnotationDeselected], [SfPdfViewer.onAnnotationEdited] and [SfPdfViewer.onAnnotationRemoved] callbacks.
+typedef PdfAnnotationCallback = void Function(Annotation annotation);
 
 /// A widget to view PDF documents.
 ///
@@ -147,6 +156,7 @@ class SfPdfViewer extends StatefulWidget {
     this.canShowScrollHead = true,
     this.pageSpacing = 4,
     this.controller,
+    this.undoController,
     this.onZoomLevelChanged,
     this.canShowPageLoadingIndicator = true,
     this.canShowScrollStatus = true,
@@ -160,6 +170,11 @@ class SfPdfViewer extends StatefulWidget {
     this.onTap,
     this.onFormFieldValueChanged,
     this.onFormFieldFocusChange,
+    this.onAnnotationAdded,
+    this.onAnnotationSelected,
+    this.onAnnotationDeselected,
+    this.onAnnotationEdited,
+    this.onAnnotationRemoved,
     this.enableDocumentLinkAnnotation = true,
     this.canShowPaginationDialog = true,
     this.canShowSignaturePadDialog = true,
@@ -167,7 +182,7 @@ class SfPdfViewer extends StatefulWidget {
     this.initialZoomLevel = 1,
     this.maxZoomLevel = 3,
     this.interactionMode = PdfInteractionMode.selection,
-    this.scrollDirection = PdfScrollDirection.vertical,
+    this.scrollDirection,
     this.pageLayoutMode = PdfPageLayoutMode.continuous,
     this.currentSearchTextHighlightColor =
         const Color.fromARGB(80, 249, 125, 0),
@@ -209,6 +224,7 @@ class SfPdfViewer extends StatefulWidget {
     this.canShowScrollHead = true,
     this.pageSpacing = 4,
     this.controller,
+    this.undoController,
     this.onZoomLevelChanged,
     this.canShowPageLoadingIndicator = true,
     this.canShowScrollStatus = true,
@@ -222,6 +238,11 @@ class SfPdfViewer extends StatefulWidget {
     this.onTap,
     this.onFormFieldValueChanged,
     this.onFormFieldFocusChange,
+    this.onAnnotationAdded,
+    this.onAnnotationSelected,
+    this.onAnnotationDeselected,
+    this.onAnnotationEdited,
+    this.onAnnotationRemoved,
     this.enableDocumentLinkAnnotation = true,
     this.canShowPaginationDialog = true,
     this.canShowSignaturePadDialog = true,
@@ -229,7 +250,7 @@ class SfPdfViewer extends StatefulWidget {
     this.initialZoomLevel = 1,
     this.maxZoomLevel = 3,
     this.interactionMode = PdfInteractionMode.selection,
-    this.scrollDirection = PdfScrollDirection.vertical,
+    this.scrollDirection,
     this.pageLayoutMode = PdfPageLayoutMode.continuous,
     this.currentSearchTextHighlightColor =
         const Color.fromARGB(80, 249, 125, 0),
@@ -269,6 +290,7 @@ class SfPdfViewer extends StatefulWidget {
     this.canShowScrollHead = true,
     this.pageSpacing = 4,
     this.controller,
+    this.undoController,
     this.onZoomLevelChanged,
     this.canShowPageLoadingIndicator = true,
     this.canShowScrollStatus = true,
@@ -282,6 +304,11 @@ class SfPdfViewer extends StatefulWidget {
     this.onTap,
     this.onFormFieldValueChanged,
     this.onFormFieldFocusChange,
+    this.onAnnotationAdded,
+    this.onAnnotationSelected,
+    this.onAnnotationDeselected,
+    this.onAnnotationEdited,
+    this.onAnnotationRemoved,
     this.enableDocumentLinkAnnotation = true,
     this.canShowPaginationDialog = true,
     this.canShowSignaturePadDialog = true,
@@ -289,7 +316,7 @@ class SfPdfViewer extends StatefulWidget {
     this.initialZoomLevel = 1,
     this.maxZoomLevel = 3,
     this.interactionMode = PdfInteractionMode.selection,
-    this.scrollDirection = PdfScrollDirection.vertical,
+    this.scrollDirection,
     this.pageLayoutMode = PdfPageLayoutMode.continuous,
     this.currentSearchTextHighlightColor =
         const Color.fromARGB(80, 249, 125, 0),
@@ -333,6 +360,7 @@ class SfPdfViewer extends StatefulWidget {
     this.canShowScrollHead = true,
     this.pageSpacing = 4,
     this.controller,
+    this.undoController,
     this.onZoomLevelChanged,
     this.canShowPageLoadingIndicator = true,
     this.canShowScrollStatus = true,
@@ -346,6 +374,11 @@ class SfPdfViewer extends StatefulWidget {
     this.onTap,
     this.onFormFieldValueChanged,
     this.onFormFieldFocusChange,
+    this.onAnnotationAdded,
+    this.onAnnotationSelected,
+    this.onAnnotationDeselected,
+    this.onAnnotationEdited,
+    this.onAnnotationRemoved,
     this.enableDocumentLinkAnnotation = true,
     this.canShowPaginationDialog = true,
     this.canShowSignaturePadDialog = true,
@@ -353,7 +386,7 @@ class SfPdfViewer extends StatefulWidget {
     this.initialZoomLevel = 1,
     this.maxZoomLevel = 3,
     this.interactionMode = PdfInteractionMode.selection,
-    this.scrollDirection = PdfScrollDirection.vertical,
+    this.scrollDirection,
     this.pageLayoutMode = PdfPageLayoutMode.continuous,
     this.currentSearchTextHighlightColor =
         const Color.fromARGB(80, 249, 125, 0),
@@ -586,6 +619,24 @@ class SfPdfViewer extends StatefulWidget {
   ///}
   /// ```
   final PdfViewerController? controller;
+
+  /// Controls the annotation undo state.
+  final UndoHistoryController? undoController;
+
+  /// Occurs when an annotation is selected.
+  final PdfAnnotationCallback? onAnnotationSelected;
+
+  /// Occurs when a selected annotation gets deselected.
+  final PdfAnnotationCallback? onAnnotationDeselected;
+
+  /// Occurs when annotation is modified.
+  final PdfAnnotationCallback? onAnnotationEdited;
+
+  /// Occurs when an annotation is added to a page.
+  final PdfAnnotationCallback? onAnnotationAdded;
+
+  /// Occurs when annotation is removed.
+  final PdfAnnotationCallback? onAnnotationRemoved;
 
   /// Indicates whether the scroll head in [SfPdfViewer] can be displayed or not.
   ///
@@ -837,7 +888,7 @@ class SfPdfViewer extends StatefulWidget {
   ///  }
   ///}
   /// ```
-  final PdfScrollDirection scrollDirection;
+  final PdfScrollDirection? scrollDirection;
 
   /// The layout mode in which the PDF page will be rendered.
   ///
@@ -1076,6 +1127,9 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
   ///Color scheme  data
   ThemeData? _themeData;
 
+  /// Indicates whether the document needs to be reloaded to update the signed signature field.
+  bool _isSignatureSaved = false;
+
   /// Indicates whether the built-in bookmark view in the [SfPdfViewer] is
   /// opened or not.
   ///
@@ -1083,17 +1137,41 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
   bool get isBookmarkViewOpen =>
       _bookmarkKey.currentState?.showBookmark ?? false;
 
+  /// The current selected annotation.
+  Annotation? _selectedAnnotation;
+  final List<Annotation> _removedAnnotations = <Annotation>[];
+  final Map<Annotation, PdfAnnotation> _annotationMap =
+      <Annotation, PdfAnnotation>{};
+
+  /// Undo redo controller
+  late ChangeTracker _changeTracker;
+  UndoHistoryController? _undoController;
+  UndoHistoryController get _effectiveUndoController =>
+      widget.undoController ?? (_undoController ??= UndoHistoryController());
+
+  /// Text selection menu
+  bool _isTextSelectionVisibleInViewport = false;
+  int _selectedTextPageNumber = -1;
+  Offset _contextMenuPosition = Offset.zero;
+  Rect _textSelectionRegion = Rect.zero;
+  Rect? _viewportGlobalRect;
+  OverlayEntry? _textSelectionOverlayEntry;
+
   @override
   void initState() {
     super.initState();
     _plugin = PdfViewerPlugin();
-    _scrollDirection = widget.pageLayoutMode == PdfPageLayoutMode.single
-        ? PdfScrollDirection.horizontal
-        : widget.scrollDirection;
+    _scrollDirection = widget.scrollDirection != null
+        ? widget.scrollDirection!
+        : (widget.pageLayoutMode == PdfPageLayoutMode.single
+            ? PdfScrollDirection.horizontal
+            : PdfScrollDirection.vertical);
     _tempScrollDirection = _scrollDirection;
     _pageLayoutMode = widget.pageLayoutMode;
     _pdfViewerController = widget.controller ?? PdfViewerController();
     _pdfViewerController._addListener(_handleControllerValueChange);
+    _undoController = widget.undoController ?? UndoHistoryController();
+    _changeTracker = ChangeTracker()..undoController = _effectiveUndoController;
     _setInitialScrollOffset();
     _offsetBeforeOrientationChange = Offset.zero;
     _hasError = false;
@@ -1139,9 +1217,15 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
         _pdfViewerController._addListener(_handleControllerValueChange);
       }
     }
-    _scrollDirection = widget.pageLayoutMode == PdfPageLayoutMode.single
-        ? PdfScrollDirection.horizontal
-        : widget.scrollDirection;
+    if (oldWidget.undoController != widget.undoController) {
+      _undoController = widget.undoController ?? UndoHistoryController();
+      _changeTracker.undoController = _effectiveUndoController;
+    }
+    _scrollDirection = widget.scrollDirection != null
+        ? widget.scrollDirection!
+        : (widget.pageLayoutMode == PdfPageLayoutMode.single
+            ? PdfScrollDirection.horizontal
+            : PdfScrollDirection.vertical);
     _compareDocument(oldWidget._provider.getPdfBytes(context),
         widget._provider.getPdfBytes(context), oldWidget.password);
     if (oldWidget.pageLayoutMode != widget.pageLayoutMode &&
@@ -1215,7 +1299,10 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
       widget
           .onTextSelectionChanged!(PdfTextSelectionChangedDetails(null, null));
     }
+    _changeTracker.reset();
+    _changeTracker.dispose();
     _pdfViewerController._removeListener(_handleControllerValueChange);
+    _hideTextSelectionMenu();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -1278,6 +1365,10 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
     _isPageChanged = false;
     _isSinglePageViewPageChanged = false;
     _isPasswordUsed = false;
+    _changeTracker.reset();
+    _removedAnnotations.clear();
+    _annotationMap.clear();
+    _hideTextSelectionMenu();
   }
 
   /// Retrieves the form field details in the document
@@ -1396,11 +1487,11 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
       // Retrieve the signature field details
       if (field is PdfSignatureField && field.signature == null) {
         final PdfSignatureFormFieldHelper helper = PdfSignatureFormFieldHelper(
-            field, pageIndex,
-            onValueChanged: _formFieldValueChanged,
-            onFocusChange: widget.onFormFieldFocusChange,
-            localizations: _localizations,
-            themeData: _themeData);
+          field,
+          pageIndex,
+          onValueChanged: _formFieldValueChanged,
+          onFocusChange: widget.onFormFieldFocusChange,
+        );
 
         _pdfViewerController._formFields.add(helper.getFormField());
       }
@@ -1521,10 +1612,91 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
     }
   }
 
+  /// Retrieves the annotation details from the document.
+  void _retrieveAnnotations() {
+    for (int pageIndex = 0; pageIndex < _document!.pages.count; pageIndex++) {
+      int zOrder = 0;
+      final PdfPage page = _document!.pages[pageIndex];
+      final int pageNumber = pageIndex + 1;
+      final PdfAnnotationCollection annotations = page.annotations;
+      for (int annotationIndex = 0;
+          annotationIndex < annotations.count;
+          annotationIndex++) {
+        final PdfAnnotation pdfAnnotation = annotations[annotationIndex];
+        final Annotation? annotation =
+            _createAnnotation(pdfAnnotation, pageNumber);
+
+        if (annotation != null) {
+          annotation.zOrder = zOrder++;
+          _pdfViewerController._annotations.add(annotation);
+          _annotationMap.putIfAbsent(annotation, () => pdfAnnotation);
+        }
+      }
+    }
+  }
+
+  /// Creates the annotation from the PDF annotation.
+  Annotation? _createAnnotation(PdfAnnotation pdfAnnotation, int pageNumber) {
+    Annotation? annotation;
+    if (pdfAnnotation is PdfTextMarkupAnnotation) {
+      final PdfTextMarkupAnnotation textMarkup = pdfAnnotation;
+      final List<Rect> textMarkupRects = textMarkup.boundsCollection;
+
+      switch (textMarkup.textMarkupAnnotationType) {
+        case PdfTextMarkupAnnotationType.highlight:
+          annotation = HighlightAnnotation(
+              textBoundsCollection: _getTextLines(textMarkupRects, pageNumber));
+          break;
+        case PdfTextMarkupAnnotationType.underline:
+          annotation = UnderlineAnnotation(
+              textBoundsCollection: _getTextLines(textMarkupRects, pageNumber));
+          break;
+        case PdfTextMarkupAnnotationType.strikethrough:
+          annotation = StrikethroughAnnotation(
+              textBoundsCollection: _getTextLines(textMarkupRects, pageNumber));
+          break;
+        case PdfTextMarkupAnnotationType.squiggly:
+          annotation = SquigglyAnnotation(
+              textBoundsCollection: _getTextLines(textMarkupRects, pageNumber));
+          break;
+      }
+
+      annotation.setColor(textMarkup.color.materialColor);
+    }
+
+    if (annotation != null) {
+      final bool isLocked =
+          pdfAnnotation.annotationFlags.contains(PdfAnnotationFlags.locked);
+
+      annotation.setOpacity(pdfAnnotation.opacity);
+      annotation.setIsLocked(isLocked);
+      annotation.onPropertyChange = _handleAnnotationPropertyChange;
+      annotation.onPropertyChanged = _handleAnnotationPropertyChanged;
+
+      annotation.name = pdfAnnotation.text;
+      annotation.author = pdfAnnotation.author;
+      annotation.subject = pdfAnnotation.subject;
+    }
+    return annotation;
+  }
+
+  /// Returns the text lines from the text markup annotation.
+  List<PdfTextLine> _getTextLines(List<Rect> rects, int pageNumber) {
+    final List<PdfTextLine> textLines = <PdfTextLine>[];
+    for (final Rect rect in rects) {
+      final PdfTextLine textLine = PdfTextLine(rect, '', pageNumber);
+      textLines.add(textLine);
+    }
+    return textLines;
+  }
+
   /// Save the PDF document with the modified data and returns the data bytes.
   Future<List<int>> _saveDocument() async {
     // Update the signature form fields data
     _updateSignatureFormFields();
+
+    // Update the annotations in the document
+    _updateAnnotations();
 
     // Set the default appearance for the form.
     _document!.form.setDefaultAppearance(false);
@@ -1537,7 +1709,11 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
     // Save and reload the document
     _pdfBytes = Uint8List(0);
     _pdfBytes = Uint8List.fromList(await _document!.save());
-    _loadPdfDocument(true, true);
+
+    if (_isSignatureSaved) {
+      _loadPdfDocument(true, true);
+      _isSignatureSaved = false;
+    }
 
     return _pdfBytes.toList();
   }
@@ -1560,7 +1736,40 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
                     helper.bounds.width, helper.bounds.height));
             helper.pdfField.form!.fields.remove(helper.pdfSignatureField);
           }
+          _isSignatureSaved = true;
         }
+      }
+    }
+  }
+
+  /// Updates the existing annotations and add new annotations.
+  void _updateAnnotations() {
+    for (final Annotation annotation in _pdfViewerController._annotations) {
+      final PdfPage pdfPage = _document!.pages[annotation.pageNumber - 1];
+      PdfAnnotation? pdfAnnotation;
+
+      if (_annotationMap.containsKey(annotation)) {
+        pdfAnnotation = _annotationMap[annotation];
+      }
+
+      pdfAnnotation = annotation.saveToPage(pdfPage, pdfAnnotation);
+
+      if (!_annotationMap.containsKey(annotation)) {
+        _annotationMap.putIfAbsent(annotation, () => pdfAnnotation!);
+      }
+    }
+    _removeAnnotationsFromDocument();
+  }
+
+  /// Removes the annotations from the document if any existing annotation is removed.
+  void _removeAnnotationsFromDocument() {
+    for (final Annotation annotation in _removedAnnotations) {
+      final int pageNumber = annotation.pageNumber;
+      final PdfPage pdfPage = _document!.pages[pageNumber - 1];
+      if (_annotationMap.containsKey(annotation)) {
+        final PdfAnnotation pdfAnnotation = _annotationMap[annotation]!;
+        _annotationMap.remove(annotation);
+        pdfPage.annotations.remove(pdfAnnotation);
       }
     }
   }
@@ -1589,6 +1798,7 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
       _document = await _pdfDocumentLoadCancellableOperation?.value;
       if (_document != null) {
         _retrieveFormFieldsDetails();
+        _retrieveAnnotations();
         _pdfTextExtractor = PdfTextExtractor(_document!);
         if (!kIsWeb) {
           _performTextExtraction();
@@ -2396,12 +2606,10 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
   /// Get the global rect of viewport region.
   Rect? _getViewportGlobalRect() {
     Rect? viewportGlobalRect;
-    if (kIsDesktop &&
-        !_isMobileView &&
-        ((widget.pageLayoutMode == PdfPageLayoutMode.single &&
-                _singlePageViewKey.currentContext != null) ||
-            (_pdfScrollableStateKey.currentContext != null &&
-                widget.pageLayoutMode == PdfPageLayoutMode.continuous))) {
+    if ((widget.pageLayoutMode == PdfPageLayoutMode.single &&
+            _singlePageViewKey.currentContext != null) ||
+        (_pdfScrollableStateKey.currentContext != null &&
+            widget.pageLayoutMode == PdfPageLayoutMode.continuous)) {
       RenderBox viewportRenderBox;
       if (widget.pageLayoutMode == PdfPageLayoutMode.single) {
         viewportRenderBox =
@@ -2421,17 +2629,19 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
     return viewportGlobalRect;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final Container emptyContainer = Container(
+  Widget _getEmptyContainer() {
+    return Container(
       color: _pdfViewerThemeData!.backgroundColor ??
           (_themeData!.colorScheme.brightness == Brightness.light
               ? const Color(0xFFD6D6D6)
               : const Color(0xFF303030)),
     );
-    final Stack emptyLinearProgressView = Stack(
+  }
+
+  Widget _getEmptyLinearProgressView() {
+    return Stack(
       children: <Widget>[
-        emptyContainer,
+        _getEmptyContainer(),
         LinearProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(
               _pdfViewerThemeData!.progressBarColor ??
@@ -2442,7 +2652,10 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
         ),
       ],
     );
+  }
 
+  @override
+  Widget build(BuildContext context) {
     // call PdfViewerController methods after ScrollController attached.
     _isDocumentLoaded();
 
@@ -2543,7 +2756,7 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
                         }
                         if (_originalWidth!.length !=
                             _pdfViewerController.pageCount) {
-                          return emptyContainer;
+                          return _getEmptyContainer();
                         }
                         final int pageIndex = index + 1;
                         final Size calculatedSize = _calculateSize(
@@ -2571,14 +2784,11 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
                                 .extractText(startPageIndex: index);
                           }
                         }
-                        Rect? viewportGlobalRect;
-                        if (_isTextSelectionCleared) {
-                          viewportGlobalRect = _getViewportGlobalRect();
-                        }
+                        _viewportGlobalRect = _getViewportGlobalRect();
                         final PdfPageView page = PdfPageView(
                             _pdfPagesKey[pageIndex]!,
                             pdfImages[pageIndex],
-                            viewportGlobalRect,
+                            _viewportGlobalRect,
                             viewportDimension,
                             widget.interactionMode,
                             calculatedSize.width,
@@ -2588,10 +2798,11 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
                             _pdfPages,
                             index,
                             _pdfViewerController,
+                            _effectiveUndoController,
                             widget.maxZoomLevel,
                             widget.enableDocumentLinkAnnotation,
                             widget.enableTextSelection,
-                            widget.onTextSelectionChanged,
+                            _handleTextSelectionChanged,
                             widget.onHyperlinkClicked,
                             _handleTextSelectionDragStarted,
                             _handleTextSelectionDragEnded,
@@ -2617,7 +2828,10 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
                             widget.canShowPageLoadingIndicator,
                             widget.canShowSignaturePadDialog,
                             _handlePageTap,
-                            _pdfViewerController._formFields);
+                            _pdfViewerController._formFields,
+                            _pdfViewerController._annotations,
+                            _selectedAnnotation,
+                            _onAnnotationSelectionChanged);
                         final double pageSpacing =
                             index == _pdfViewerController.pageCount - 1
                                 ? 0.0
@@ -2683,14 +2897,19 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
                         pdfContainer = MouseRegion(
                           cursor: _cursor,
                           onHover: (PointerHoverEvent details) {
-                            setState(() {
-                              if (widget.interactionMode ==
-                                  PdfInteractionMode.pan) {
+                            if (widget.interactionMode ==
+                                    PdfInteractionMode.pan &&
+                                _cursor != SystemMouseCursors.grab) {
+                              setState(() {
                                 _cursor = SystemMouseCursors.grab;
-                              } else {
+                              });
+                            } else if (widget.interactionMode ==
+                                    PdfInteractionMode.selection &&
+                                _cursor != SystemMouseCursors.basic) {
+                              setState(() {
                                 _cursor = SystemMouseCursors.basic;
-                              }
-                            });
+                              });
+                            }
                           },
                           child: SinglePageView(
                               _singlePageViewKey,
@@ -2714,6 +2933,7 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
                               isBookmarkViewOpen,
                               _textDirection,
                               _isTablet,
+                              _scrollDirection,
                               children),
                         );
                         if (_isSinglePageViewPageChanged &&
@@ -2721,8 +2941,7 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
                                 .contains(_pdfViewerController.pageNumber)) {
                           Future<dynamic>.delayed(Duration.zero, () async {
                             if (_pageController.hasClients) {
-                              _pdfViewerController._scrollPositionX =
-                                  _pageController.offset;
+                              _pdfViewerController._scrollPositionX = 0;
                             }
                             if (!_isSearchStarted) {
                               _pdfPagesKey[_pdfViewerController.pageNumber]
@@ -2757,14 +2976,19 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
                         child = MouseRegion(
                           cursor: _cursor,
                           onHover: (PointerHoverEvent details) {
-                            setState(() {
-                              if (widget.interactionMode ==
-                                  PdfInteractionMode.pan) {
+                            if (widget.interactionMode ==
+                                    PdfInteractionMode.pan &&
+                                _cursor != SystemMouseCursors.grab) {
+                              setState(() {
                                 _cursor = SystemMouseCursors.grab;
-                              } else {
+                              });
+                            } else if (widget.interactionMode ==
+                                    PdfInteractionMode.selection &&
+                                _cursor != SystemMouseCursors.basic) {
+                              setState(() {
                                 _cursor = SystemMouseCursors.basic;
-                              }
-                            });
+                              });
+                            }
                           },
                           child: SizedBox(
                               height: childSize.height,
@@ -2816,9 +3040,9 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
                         ],
                       );
                     } else if (snapshot.hasError) {
-                      return emptyContainer;
+                      return _getEmptyContainer();
                     } else {
-                      return emptyLinearProgressView;
+                      return _getEmptyLinearProgressView();
                     }
                   }),
             ),
@@ -2826,8 +3050,8 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
         : (_hasError
             ? _isEncryptedDocument
                 ? _showWebPasswordDialogue()
-                : emptyContainer
-            : emptyLinearProgressView);
+                : _getEmptyContainer()
+            : _getEmptyLinearProgressView());
   }
 
   void _handleSinglePageViewPageChanged(int newPage) {
@@ -2926,17 +3150,21 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
 
   void _handlePdfPagePointerMove(PointerMoveEvent details) {
     if (details.kind == PointerDeviceKind.touch && kIsDesktop) {
-      setState(() {
-        _isScaleEnabled = true;
-      });
+      if (!_isScaleEnabled) {
+        setState(() {
+          _isScaleEnabled = true;
+        });
+      }
     }
   }
 
   void _handlePdfPagePointerUp(PointerUpEvent details) {
     if (details.kind == PointerDeviceKind.touch && kIsDesktop) {
-      setState(() {
-        _isScaleEnabled = false;
-      });
+      if (_isScaleEnabled) {
+        setState(() {
+          _isScaleEnabled = false;
+        });
+      }
     }
   }
 
@@ -3006,7 +3234,11 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
           draggedDistance.dy.abs() < kPrecisePointerHitSlop;
     }
     if (widget.interactionMode == PdfInteractionMode.pan) {
-      _cursor = SystemMouseCursors.grabbing;
+      if (_cursor != SystemMouseCursors.grabbing) {
+        setState(() {
+          _cursor = SystemMouseCursors.grabbing;
+        });
+      }
     }
     if (!_isScaleEnabled &&
         event.kind == PointerDeviceKind.touch &&
@@ -3015,10 +3247,12 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
         _isScaleEnabled = true;
       });
     }
-    _pdfPagesKey[_pdfViewerController.pageNumber]
-        ?.currentState
-        ?.canvasRenderBox
-        ?.scrollStarted();
+    if (!_canInvokeOnTap) {
+      _pdfPagesKey[_pdfViewerController.pageNumber]
+          ?.currentState
+          ?.canvasRenderBox
+          ?.scrollStarted();
+    }
   }
 
   void _handlePointerUp(PointerUpEvent details) {
@@ -3091,6 +3325,7 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
   /// or device's back button. ALso we can close the bookmark programmatically by
   /// using Navigator.pop(context);
   void openBookmarkView() {
+    _deselectAnnotation();
     _bookmarkKey.currentState?.open();
   }
 
@@ -3340,6 +3575,7 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
       }
       _previousPageNumber = _pdfViewerController.pageNumber;
       _isPageChanged = true;
+      _checkMount();
     }
   }
 
@@ -3638,7 +3874,207 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
           : _pdfViewerController._pageNumber = 0;
     }
     _pageChanged();
-    _checkMount();
+  }
+
+  void _handleTextSelectionChanged(PdfTextSelectionChangedDetails details) {
+    if (_selectedAnnotation != null) {
+      _pdfViewerController.deselectAnnotation(_selectedAnnotation!);
+    }
+
+    if (widget.onTextSelectionChanged != null) {
+      widget.onTextSelectionChanged!(details);
+    }
+
+    if (_pdfViewerController.annotationMode == PdfAnnotationMode.none) {
+      if (details.globalSelectedRegion != null) {
+        if (_textSelectionRegion != details.globalSelectedRegion!) {
+          _textSelectionRegion = details.globalSelectedRegion!;
+          if (details.selectedText != null &&
+              details.selectedText!.isNotEmpty) {
+            _checkPositionOfTextSelectionMenu();
+          }
+        }
+      } else {
+        _textSelectionRegion = Rect.zero;
+        _hideTextSelectionMenu();
+      }
+    }
+  }
+
+  /// Checks whether the text selection region is visible in the viewport
+  /// and displays the text selection menu.
+  void _checkPositionOfTextSelectionMenu() {
+    _isTextSelectionVisibleInViewport =
+        _getViewportGlobalRect()!.overlaps(_textSelectionRegion);
+    final List<PdfTextLine> seletedLines = getSelectedTextLines();
+    if (seletedLines.isNotEmpty) {
+      _selectedTextPageNumber = seletedLines.first.pageNumber;
+    }
+    if (_isTextSelectionVisibleInViewport) {
+      final TextSelectionMenuLocation location =
+          _determineContextMenuLocation();
+      _calculateContextMenuBounds(location);
+      _showTextSelectionMenu();
+    } else {
+      _hideTextSelectionMenu();
+    }
+  }
+
+  /// Return the location of text selection menu based on the text selection region.
+  TextSelectionMenuLocation _determineContextMenuLocation() {
+    final double distanceFromTop =
+        _textSelectionRegion.top - _viewportGlobalRect!.top;
+    final double distanceFromBottom =
+        _viewportGlobalRect!.bottom - _textSelectionRegion.bottom;
+    final double distanceFromLeft =
+        _textSelectionRegion.left - _viewportGlobalRect!.left;
+    final double distanceFromRight =
+        _viewportGlobalRect!.right - _textSelectionRegion.right;
+    final double largestDistance = max(max(distanceFromTop, distanceFromLeft),
+        max(distanceFromBottom, distanceFromRight));
+
+    if (largestDistance == distanceFromTop &&
+        ((kTextSelectionMenuHeight + kTextSelectionMenuMargin) /
+                _pdfViewerController.zoomLevel) <=
+            distanceFromTop) {
+      return TextSelectionMenuLocation.top;
+    } else if (largestDistance == distanceFromLeft &&
+        ((kTextSelectionMenuWidth + kTextSelectionMenuMargin) /
+                _pdfViewerController.zoomLevel) <=
+            distanceFromLeft) {
+      return TextSelectionMenuLocation.left;
+    } else if (largestDistance == distanceFromBottom &&
+        ((kTextSelectionMenuHeight + kTextSelectionMenuMargin) /
+                _pdfViewerController.zoomLevel) <=
+            distanceFromBottom) {
+      return TextSelectionMenuLocation.bottom;
+    } else if (largestDistance == distanceFromRight &&
+        ((kTextSelectionMenuWidth + kTextSelectionMenuMargin) /
+                _pdfViewerController.zoomLevel) <=
+            distanceFromRight) {
+      return TextSelectionMenuLocation.right;
+    } else {
+      return TextSelectionMenuLocation.center;
+    }
+  }
+
+  /// Calculate the bounds of text selection menu based on the location.
+  void _calculateContextMenuBounds(TextSelectionMenuLocation location) {
+    Offset localPosition = Offset.zero;
+    switch (location) {
+      case TextSelectionMenuLocation.left:
+        localPosition = Offset(
+            _textSelectionRegion.left -
+                kTextSelectionMenuWidth -
+                kTextSelectionMenuMargin,
+            _textSelectionRegion.centerLeft.dy - kTextSelectionMenuHeight / 2);
+        break;
+      case TextSelectionMenuLocation.right:
+        localPosition = Offset(
+            _textSelectionRegion.right + kTextSelectionMenuMargin,
+            _textSelectionRegion.centerRight.dy - kTextSelectionMenuHeight / 2);
+        break;
+      case TextSelectionMenuLocation.top:
+        localPosition = Offset(
+            _textSelectionRegion.topCenter.dx - kTextSelectionMenuWidth / 2,
+            _textSelectionRegion.top -
+                kTextSelectionMenuHeight -
+                kTextSelectionMenuMargin);
+        break;
+      case TextSelectionMenuLocation.bottom:
+        localPosition = Offset(
+            _textSelectionRegion.bottomCenter.dx - kTextSelectionMenuWidth / 2,
+            _textSelectionRegion.bottom + kTextSelectionMenuMargin);
+        break;
+      case TextSelectionMenuLocation.center:
+        localPosition = Offset(
+            _textSelectionRegion.center.dx - kTextSelectionMenuWidth / 2,
+            _textSelectionRegion.center.dy - kTextSelectionMenuHeight / 2);
+        break;
+    }
+    if (localPosition != Offset.zero) {
+      if (localPosition.dy <
+          _viewportGlobalRect!.top + kTextSelectionMenuMargin) {
+        localPosition = Offset(localPosition.dx,
+            _viewportGlobalRect!.top + kTextSelectionMenuMargin);
+      } else if (localPosition.dy + kTextSelectionMenuHeight >
+          _viewportGlobalRect!.bottom - kTextSelectionMenuMargin) {
+        localPosition = Offset(
+            localPosition.dx,
+            _viewportGlobalRect!.bottom -
+                kTextSelectionMenuMargin -
+                kTextSelectionMenuHeight);
+      }
+
+      if (localPosition.dx <
+          _viewportGlobalRect!.left + kTextSelectionMenuMargin) {
+        localPosition = Offset(
+            _viewportGlobalRect!.left + kTextSelectionMenuMargin,
+            localPosition.dy);
+      } else if (localPosition.dx + kTextSelectionMenuWidth >
+          _viewportGlobalRect!.right - kTextSelectionMenuMargin) {
+        localPosition = Offset(
+            _viewportGlobalRect!.right -
+                kTextSelectionMenuMargin -
+                kTextSelectionMenuWidth,
+            localPosition.dy);
+      }
+
+      _contextMenuPosition = localPosition;
+    }
+  }
+
+  /// Inserts the text selection menu into the overlay.
+  void _showTextSelectionMenu() {
+    _hideTextSelectionMenu();
+    _textSelectionOverlayEntry ??= OverlayEntry(
+      maintainState: true,
+      builder: (BuildContext context) {
+        return Positioned(
+          top: _contextMenuPosition.dy,
+          left: _contextMenuPosition.dx,
+          child: TextSelectionMenu(
+            themeData: _themeData,
+            localizations: _localizations,
+            onSelected: (String value) {
+              if (value != 'Copy') {
+                final PdfAnnotationMode annotationMode = value == 'Highlight'
+                    ? PdfAnnotationMode.highlight
+                    : value == 'Underline'
+                        ? PdfAnnotationMode.underline
+                        : value == 'Strikethrough'
+                            ? PdfAnnotationMode.strikethrough
+                            : PdfAnnotationMode.squiggly;
+                _addTextMarkupAnnotation(annotationMode);
+              } else if (value == 'Copy') {
+                Clipboard.setData(
+                  ClipboardData(
+                      text: _pdfPagesKey[_selectedTextPageNumber]
+                              ?.currentState
+                              ?.canvasRenderBox!
+                              .getSelectionDetails()
+                              .copiedText ??
+                          ''),
+                );
+                _pdfViewerController.clearSelection();
+              }
+            },
+            textDirection: _textDirection,
+          ),
+        );
+      },
+    );
+
+    Overlay.of(context, rootOverlay: true).insert(_textSelectionOverlayEntry!);
+  }
+
+  /// Removes the text selection menu from the overlay.
+  void _hideTextSelectionMenu() {
+    if (_textSelectionOverlayEntry != null) {
+      _textSelectionOverlayEntry!.remove();
+      _textSelectionOverlayEntry!.dispose();
+      _textSelectionOverlayEntry = null;
+    }
   }
 
   /// Triggers when text selection dragging started.
@@ -3653,6 +4089,43 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
     setState(() {
       _panEnabled = true;
     });
+
+    if (_pdfViewerController.annotationMode == PdfAnnotationMode.highlight ||
+        _pdfViewerController.annotationMode ==
+            PdfAnnotationMode.strikethrough ||
+        _pdfViewerController.annotationMode == PdfAnnotationMode.underline ||
+        _pdfViewerController.annotationMode == PdfAnnotationMode.squiggly) {
+      _addTextMarkupAnnotation(_pdfViewerController.annotationMode);
+    }
+  }
+
+  /// Adds the text markup annotation to the PDF document.
+  void _addTextMarkupAnnotation(PdfAnnotationMode annotationMode) {
+    final List<PdfTextLine> selectedLines = getSelectedTextLines();
+    if (selectedLines.isNotEmpty) {
+      Annotation? annotation;
+      if (annotationMode == PdfAnnotationMode.highlight) {
+        annotation = HighlightAnnotation(
+          textBoundsCollection: selectedLines,
+        );
+      } else if (annotationMode == PdfAnnotationMode.underline) {
+        annotation = UnderlineAnnotation(
+          textBoundsCollection: selectedLines,
+        );
+      } else if (annotationMode == PdfAnnotationMode.strikethrough) {
+        annotation = StrikethroughAnnotation(
+          textBoundsCollection: selectedLines,
+        );
+      } else if (annotationMode == PdfAnnotationMode.squiggly) {
+        annotation = SquigglyAnnotation(
+          textBoundsCollection: selectedLines,
+        );
+      }
+      _pdfViewerController.clearSelection();
+      if (annotation != null) {
+        _pdfViewerController.addAnnotation(annotation);
+      }
+    }
   }
 
   /// Jump to the desired page.
@@ -3908,6 +4381,7 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
           break;
       }
     } else if (property == 'searchText') {
+      _deselectAnnotation();
       _isSearchStarted = true;
       _matchedTextPageIndices.clear();
       _pdfViewerController._pdfTextSearchResult
@@ -3969,7 +4443,270 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
           }
         }
       }
+    } else if (property == 'addAnnotation') {
+      if (_pdfViewerController._annotation != null) {
+        final Annotation newAnnotation = _pdfViewerController._annotation!;
+        _setDefaultProperties(newAnnotation);
+        newAnnotation.onPropertyChange = _handleAnnotationPropertyChange;
+        newAnnotation.onPropertyChanged = _handleAnnotationPropertyChanged;
+        setState(() {
+          _pdfViewerController._annotations.add(newAnnotation);
+        });
+        _updateRemovedAnnotation(newAnnotation, false);
+        _changeTracker.addChange(AnnotationAddOrRemoveTracker(
+            annotation: newAnnotation,
+            undoCallback: _pdfViewerController.removeAnnotation,
+            redoCallback: _pdfViewerController.addAnnotation));
+        if (widget.onAnnotationAdded != null &&
+            !_changeTracker.changeInProgress) {
+          final int maxZOrder = _pdfViewerController._annotations
+              .where((Annotation annotation) =>
+                  annotation.pageNumber == newAnnotation.pageNumber)
+              .fold(-1, (int previousValue, Annotation annotation) {
+            if (annotation.zOrder > previousValue) {
+              return annotation.zOrder;
+            } else {
+              return previousValue;
+            }
+          });
+          newAnnotation.zOrder = maxZOrder + 1;
+          widget.onAnnotationAdded!(newAnnotation);
+        }
+      }
+      _pdfViewerController._annotation = null;
+    } else if (property == 'selectAnnotation') {
+      if (_pdfViewerController._annotation != null) {
+        final Annotation annotation = _pdfViewerController._annotation!;
+        if (_selectedAnnotation != annotation) {
+          _deselectAnnotation();
+          setState(() {
+            _selectedAnnotation = annotation;
+          });
+          annotation.isSelected = true;
+          _pdfViewerController.jumpToPage(annotation.pageNumber);
+          if (widget.pageLayoutMode == PdfPageLayoutMode.continuous) {
+            final PdfPageRotateAngle rotatedAngle =
+                _document!.pages[annotation.pageNumber - 1].rotation;
+            final bool isRotatedTo90or270 =
+                rotatedAngle == PdfPageRotateAngle.rotateAngle90 ||
+                    rotatedAngle == PdfPageRotateAngle.rotateAngle270;
+            final Size originalPageSize =
+                _document!.pages[annotation.pageNumber - 1].size;
+            final double heightPercentage = (isRotatedTo90or270
+                    ? originalPageSize.width
+                    : originalPageSize.height) /
+                _pdfPages[annotation.pageNumber]!.pageSize.height;
+
+            final Rect rotatedBounds = _adjustForRotation(annotation.bounds,
+                originalPageSize.width, originalPageSize.height, rotatedAngle);
+
+            if (_scrollDirection == PdfScrollDirection.horizontal) {
+              _pdfViewerController.jumpTo(
+                  xOffset: _pdfViewerController.scrollOffset.dx +
+                      rotatedBounds.left / heightPercentage,
+                  yOffset: rotatedBounds.top / heightPercentage);
+            } else {
+              _pdfViewerController.jumpTo(
+                  xOffset: rotatedBounds.left / heightPercentage,
+                  yOffset: _pdfViewerController.scrollOffset.dy +
+                      rotatedBounds.top / heightPercentage);
+            }
+          }
+          if (widget.onAnnotationSelected != null) {
+            widget.onAnnotationSelected!(annotation);
+          }
+        }
+      }
+    } else if (property == 'removeAnnotation') {
+      if (_pdfViewerController._annotation != null) {
+        final Annotation annotation = _pdfViewerController._annotation!;
+        if (_pdfViewerController.annotationSettings.canEdit(annotation)) {
+          if (annotation == _selectedAnnotation) {
+            _deselectAnnotation();
+          }
+          setState(() {
+            _pdfViewerController._annotations.remove(annotation);
+          });
+          _updateRemovedAnnotation(annotation, true);
+          _changeTracker.addChange(AnnotationAddOrRemoveTracker(
+              annotation: annotation,
+              undoCallback: _pdfViewerController.addAnnotation,
+              redoCallback: _pdfViewerController.removeAnnotation));
+          if (widget.onAnnotationRemoved != null &&
+              !_changeTracker.changeInProgress) {
+            widget.onAnnotationRemoved!(annotation);
+          }
+        }
+      }
+    } else if (property == 'deselectAnnotation') {
+      if (_selectedAnnotation != null) {
+        final Annotation annotationToDeselect =
+            _pdfViewerController._annotation!;
+        if (annotationToDeselect == _selectedAnnotation) {
+          _deselectAnnotation();
+        }
+      }
+    } else if (property == 'removeAllAnnotations') {
+      if (_pdfViewerController._annotations.isNotEmpty) {
+        final List<Annotation> annotationsToRemove = <Annotation>[];
+        for (final Annotation annotation in _pdfViewerController._annotations) {
+          if (_pdfViewerController.annotationSettings.canEdit(annotation)) {
+            if (_pdfViewerController._clearAnnotationPageNumber == 0 ||
+                annotation.pageNumber ==
+                    _pdfViewerController._clearAnnotationPageNumber) {
+              annotationsToRemove.add(annotation);
+            }
+          }
+        }
+        if (annotationsToRemove.isNotEmpty) {
+          if (_selectedAnnotation != null) {
+            if (annotationsToRemove.contains(_selectedAnnotation)) {
+              _deselectAnnotation();
+            }
+          }
+          for (final Annotation annotation in annotationsToRemove) {
+            _pdfViewerController._annotations.remove(annotation);
+            _updateRemovedAnnotation(annotation, true);
+          }
+          setState(() {
+            _changeTracker.addChange(ClearAnnotationsTracker(
+                annotations: annotationsToRemove,
+                undoCallback: _pdfViewerController.addAnnotation,
+                redoCallback: _pdfViewerController.removeAnnotation));
+          });
+        }
+      }
     }
+  }
+
+  /// Gets the rotated bounds of the annotation.
+  Rect _adjustForRotation(Rect originalBounds, double pageWidth,
+      double pageHeight, PdfPageRotateAngle angle) {
+    Rect adjustedBounds = originalBounds;
+    switch (angle) {
+      case PdfPageRotateAngle.rotateAngle90:
+        adjustedBounds = Rect.fromLTWH(pageWidth - originalBounds.bottom,
+            originalBounds.left, originalBounds.height, originalBounds.width);
+        break;
+      case PdfPageRotateAngle.rotateAngle180:
+        adjustedBounds = Rect.fromLTWH(
+            pageWidth - originalBounds.right,
+            pageHeight - originalBounds.bottom,
+            originalBounds.width,
+            originalBounds.height);
+        break;
+      case PdfPageRotateAngle.rotateAngle270:
+        adjustedBounds = Rect.fromLTWH(
+            originalBounds.top,
+            pageHeight - originalBounds.right,
+            originalBounds.height,
+            originalBounds.width);
+        break;
+      case PdfPageRotateAngle.rotateAngle0:
+        return originalBounds;
+    }
+    return adjustedBounds;
+  }
+
+  /// Assigns the default properties for the annotation.
+  void _setDefaultProperties(Annotation annotation) {
+    if (_pdfViewerController.annotationSettings.author.isNotEmpty &&
+        annotation.author == null) {
+      annotation.author = _pdfViewerController.annotationSettings.author;
+    }
+    if (annotation is HighlightAnnotation) {
+      if (annotation.color == Colors.transparent) {
+        annotation.color =
+            _pdfViewerController.annotationSettings.highlight.color;
+      }
+      if (annotation.opacity == -1) {
+        annotation.opacity =
+            _pdfViewerController.annotationSettings.highlight.opacity;
+      }
+    } else if (annotation is StrikethroughAnnotation) {
+      if (annotation.color == Colors.transparent) {
+        annotation.color =
+            _pdfViewerController.annotationSettings.strikethrough.color;
+      }
+      if (annotation.opacity == -1) {
+        annotation.opacity =
+            _pdfViewerController.annotationSettings.strikethrough.opacity;
+      }
+    } else if (annotation is UnderlineAnnotation) {
+      if (annotation.color == Colors.transparent) {
+        annotation.color =
+            _pdfViewerController.annotationSettings.underline.color;
+      }
+      if (annotation.opacity == -1) {
+        annotation.opacity =
+            _pdfViewerController.annotationSettings.underline.opacity;
+      }
+    } else if (annotation is SquigglyAnnotation) {
+      if (annotation.color == Colors.transparent) {
+        annotation.color =
+            _pdfViewerController.annotationSettings.squiggly.color;
+      }
+      if (annotation.opacity == -1) {
+        annotation.opacity =
+            _pdfViewerController.annotationSettings.squiggly.opacity;
+      }
+    }
+  }
+
+  void _deselectAnnotation() {
+    if (_selectedAnnotation != null) {
+      final Annotation annotation = _selectedAnnotation!;
+      setState(() {
+        _selectedAnnotation = null;
+      });
+      annotation.isSelected = false;
+      if (widget.onAnnotationDeselected != null) {
+        widget.onAnnotationDeselected!(annotation);
+      }
+    }
+  }
+
+  void _updateRemovedAnnotation(Annotation annotation, bool shouldAdd) {
+    if (shouldAdd) {
+      if (!_removedAnnotations.contains(annotation)) {
+        _removedAnnotations.add(annotation);
+      }
+    } else {
+      if (_removedAnnotations.contains(annotation)) {
+        _removedAnnotations.remove(annotation);
+      }
+    }
+  }
+
+  void _onAnnotationSelectionChanged(Annotation? annotation) {
+    if (annotation == null) {
+      _deselectAnnotation();
+    } else {
+      if (annotation != _selectedAnnotation) {
+        _deselectAnnotation();
+      }
+      annotation.isSelected = true;
+      if (widget.onAnnotationSelected != null) {
+        widget.onAnnotationSelected!(annotation);
+      }
+    }
+    setState(() {
+      _selectedAnnotation = annotation;
+    });
+  }
+
+  bool _handleAnnotationPropertyChange(
+      Annotation annotation, String propertyName) {
+    return _pdfViewerController.annotationSettings.canEdit(annotation);
+  }
+
+  void _handleAnnotationPropertyChanged(Annotation annotation,
+      String propertyName, dynamic oldValue, dynamic newValue) {
+    _changeTracker.addChange(AnnotationPropertyChangeTracker(
+        propertyName: propertyName,
+        oldValue: oldValue,
+        newValue: newValue,
+        annotation: annotation));
   }
 
   /// Perform text search for mobile, windows and macOS platforms.
@@ -4235,6 +4972,7 @@ class SfPdfViewerState extends State<SfPdfViewer> with WidgetsBindingObserver {
       _pdfViewerController._scrollPositionX = offset.dx.abs();
     }
     _pdfViewerController._scrollPositionY = offset.dy.abs();
+    _hideTextSelectionMenu();
   }
 }
 
@@ -4329,6 +5067,22 @@ class PdfViewerController extends ChangeNotifier with _ValueChangeNotifier {
 
   /// List of form fields in the docuemnt.
   final List<PdfFormField> _formFields = <PdfFormField>[];
+
+  /// The page number in which the annotations are to be removed.
+  /// If the value is 0, all the annotations in the document will be removed.
+  int _clearAnnotationPageNumber = 0;
+
+  /// Annotation instance
+  Annotation? _annotation;
+
+  /// Current annotation mode
+  PdfAnnotationMode _annotationMode = PdfAnnotationMode.none;
+
+  /// List of annotations in the document.
+  final List<Annotation> _annotations = <Annotation>[];
+
+  /// Gets or sets the default annotation settings.
+  PdfAnnotationSettings annotationSettings = PdfAnnotationSettings();
 
   /// Imported form data bytes
   List<int> _importedFormDataBytes = <int>[];
@@ -5186,6 +5940,64 @@ class PdfViewerController extends ChangeNotifier with _ValueChangeNotifier {
     _clearFormDataPageNumber = 0;
   }
 
+  /// Adds the given annotation to the page represented by the annotation’s PageNumber property..
+  void addAnnotation(Annotation annotation) {
+    _annotation = annotation;
+    _notifyPropertyChangedListeners(property: 'addAnnotation');
+    _annotation = null;
+    clearSelection();
+  }
+
+  /// Removes the given annotation from the page.
+  void removeAnnotation(Annotation annotation) {
+    if (_annotations.contains(annotation)) {
+      _annotation = annotation;
+      _notifyPropertyChangedListeners(property: 'removeAnnotation');
+      _annotation = null;
+    }
+  }
+
+  /// Selects the given annotation.
+  void selectAnnotation(Annotation annotation) {
+    if (_annotations.contains(annotation)) {
+      _annotation = annotation;
+      _notifyPropertyChangedListeners(property: 'selectAnnotation');
+      _annotation = null;
+    }
+  }
+
+  /// Deselects the given annotation.
+  void deselectAnnotation(Annotation annotation) {
+    if (_annotations.contains(annotation)) {
+      _annotation = annotation;
+      _notifyPropertyChangedListeners(property: 'deselectAnnotation');
+      _annotation = null;
+    }
+  }
+
+  /// Gets the list of annotations in the PDF.
+  List<Annotation> getAnnotations() {
+    return _annotations;
+  }
+
+  /// Gets or sets a value indicating the type of annotation that should be drawn using UI interaction on the PDF pages.
+  PdfAnnotationMode get annotationMode => _annotationMode;
+  set annotationMode(PdfAnnotationMode value) {
+    if (_annotationMode != value) {
+      clearSelection();
+      _annotationMode = value;
+    }
+  }
+
+  /// Removes all annotations from the PDF document.
+  ///
+  /// [pageNumber] - optional – removes the annotation in the specified page
+  void removeAllAnnotations({int pageNumber = 0}) {
+    _clearAnnotationPageNumber = pageNumber;
+    _notifyPropertyChangedListeners(property: 'removeAllAnnotations');
+    _clearAnnotationPageNumber = 0;
+  }
+
   /// Resets the controller value when widget is updated.
   void _reset() {
     _zoomLevel = 1.0;
@@ -5196,6 +6008,7 @@ class PdfViewerController extends ChangeNotifier with _ValueChangeNotifier {
     _searchText = '';
     _pageNavigator = null;
     _pdfBookmark = null;
+    _annotations.clear();
     _notifyPropertyChangedListeners();
   }
 }

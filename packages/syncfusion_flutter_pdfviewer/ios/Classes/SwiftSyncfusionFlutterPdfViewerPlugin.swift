@@ -9,7 +9,7 @@ public class SwiftSyncfusionFlutterPdfViewerPlugin: NSObject, FlutterPlugin {
     var documentRepo = [String: CGPDFDocument?]()
 
     let dispatcher = DispatchQueue(label: "syncfusion_flutter_pdfviewer")
-
+    
     // Point to pixel ratio calculation
     // 1 inch = 96 pixels
     // 1 inch = 72 points
@@ -135,7 +135,7 @@ public class SwiftSyncfusionFlutterPdfViewerPlugin: NSObject, FlutterPlugin {
     {
         let document = self.documentRepo[documentID]!!
         let page = document.page(at: Int(index))
-        var pageRect = page!.getBoxRect(.cropBox)
+        let pageRect = page!.getBoxRect(.cropBox)
         let imageRect = CGRect(x: 0,y: 0,width: pageRect.size.width*CGFloat(scale),height: pageRect.size.height*CGFloat(scale))
         if #available(iOS 10.0, *) {
             let format = UIGraphicsImageRendererFormat()
@@ -147,8 +147,7 @@ public class SwiftSyncfusionFlutterPdfViewerPlugin: NSObject, FlutterPlugin {
             }
             let renderer = UIGraphicsImageRenderer(size: imageRect.size,format: format)
             let img = renderer.image { ctx in
-                let cropBox = page!.getBoxRect(.cropBox)
-                let transform = page!.getDrawingTransform(.cropBox, rect: cropBox, rotate: 0, preserveAspectRatio: true)
+                let transform = page!.getDrawingTransform(.cropBox, rect: CGRect(origin: CGPoint.zero, size: pageRect.size), rotate: 0, preserveAspectRatio: true)
                 ctx.cgContext.translateBy(x: 0.0, y: imageRect.size.height)
                 ctx.cgContext.scaleBy(x: CGFloat(scale), y: -CGFloat(scale))
                 ctx.cgContext.concatenate(transform)

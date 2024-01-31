@@ -151,6 +151,7 @@ class ScrollHeadOverlayState extends State<ScrollHeadOverlay> {
   SfLocalizations? _localizations;
   final GlobalKey _childKey = GlobalKey();
   Timer? _scrollTimer;
+  EdgeInsets _boundaryMargin = EdgeInsets.zero;
 
   /// Indicates whether the user interaction has ended.
   bool _isInteractionEnded = true;
@@ -310,6 +311,7 @@ class ScrollHeadOverlayState extends State<ScrollHeadOverlay> {
         onDoubleTapZoomInvoked: _onDoubleTapZoomInvoked,
         transformationController: widget.transformationController,
         key: _childKey,
+        boundaryMargin: _boundaryMargin,
         enableDoubleTapZooming: enableDoubleTapZoom,
         scaleEnabled:
             // ignore: avoid_bool_literals_in_conditional_expressions
@@ -652,6 +654,23 @@ class ScrollHeadOverlayState extends State<ScrollHeadOverlay> {
   void _handleInteractionChanged(ScaleUpdateDetails details) {
     if (details.scale != 1) {
       _isInteractionEnded = false;
+    }
+    if (details.scale < 1 && widget.pdfViewerController.zoomLevel > 1) {
+      final double verticalMargin = widget.totalImageSize.height <
+              widget.viewportDimension.height
+          ? (widget.viewportDimension.height - widget.totalImageSize.height) / 2
+          : 0;
+      final double horizontalMargin = widget.totalImageSize.width <
+              widget.viewportDimension.width
+          ? (widget.viewportDimension.width - widget.totalImageSize.width) / 2
+          : 0;
+      _boundaryMargin = EdgeInsets.only(
+          top: verticalMargin,
+          bottom: verticalMargin,
+          left: horizontalMargin,
+          right: horizontalMargin);
+    } else {
+      _boundaryMargin = EdgeInsets.zero;
     }
     widget.onInteractionUpdate?.call(details);
   }

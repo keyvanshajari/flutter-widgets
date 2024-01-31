@@ -1,3 +1,37 @@
+## [24.1.47] - 01/23/2024
+
+**Bugs**
+
+* Now, when viewing a single-page document in a continuous page layout, the user can fully zoom out of the document with a pinch gesture in the `SfPdfViewer` widget.
+
+## [24.1.46] - 01/17/2024
+
+**Bugs**
+
+* Now, the application will not crash when switching the PDF document in the `SfPdfViewer` widget on the Windows platform.
+
+**General**
+
+* Upgraded the `intl` package to the latest version 0.19.0.
+
+## [24.1.45] - 01/09/2024
+
+**Bugs**
+
+* Now, the `SfPdfViewer` will render the PDF pages considering the crop box value in iOS.
+* Now, when using German locale, the 'Open' label in the hyperlink and password dialogs will be translated properly.
+
+## [24.1.41] - 18/12/2023
+
+**Bugs**
+
+* Now, the `SfPdfViewer` will be properly deployed without namespace errors when built with a Gradle version greater than 8.x.
+
+**Features**
+
+* Provided support to add, remove, modify, and save text markup annotations in PDF files. The available text markups are highlight, underline, strikethrough, and squiggly.
+* Provided support to scroll vertically in single-page layout mode.
+
 ## [23.2.6] - 11/28/2023 
 
 **Bugs**

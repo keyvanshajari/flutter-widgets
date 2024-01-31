@@ -107,7 +107,8 @@ class _ScrollHeadState extends State<ScrollHead> {
           widget.pageLayoutMode != PdfPageLayoutMode.single) {
         return Stack(
             children: <Widget>[verticalScrollBar, horizontalScrollBar]);
-      } else if (widget.pageLayoutMode == PdfPageLayoutMode.single) {
+      } else if (widget.scrollDirection == PdfScrollDirection.horizontal &&
+          widget.pageLayoutMode == PdfPageLayoutMode.single) {
         return horizontalScrollBar;
       } else {
         return verticalScrollBar;

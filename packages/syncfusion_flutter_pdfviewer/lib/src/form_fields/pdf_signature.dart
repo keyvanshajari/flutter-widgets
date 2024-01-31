@@ -32,12 +32,12 @@ class PdfSignatureFormField extends PdfFormField {
 /// Represents the signature form field helper.
 class PdfSignatureFormFieldHelper extends PdfFormFieldHelper {
   /// Initializes a new instance of the [PdfSignatureFormFieldHelper] class.
-  PdfSignatureFormFieldHelper(this.pdfSignatureField, int pageIndex,
-      {this.onValueChanged,
-      this.onFocusChange,
-      this.localizations,
-      this.themeData})
-      : super(pdfSignatureField, pageIndex) {
+  PdfSignatureFormFieldHelper(
+    this.pdfSignatureField,
+    int pageIndex, {
+    this.onValueChanged,
+    this.onFocusChange,
+  }) : super(pdfSignatureField, pageIndex) {
     bounds = pdfSignatureField.bounds;
   }
 
@@ -49,12 +49,6 @@ class PdfSignatureFormFieldHelper extends PdfFormFieldHelper {
 
   /// The callback which is called when the focus of the form field changes.
   final PdfFormFieldFocusChangeCallback? onFocusChange;
-
-  /// The localizations of the signature form field.
-  final SfLocalizations? localizations;
-
-  /// The theme data of the signature form field.
-  ThemeData? themeData;
 
   /// The signature form field object.
   late PdfSignatureFormField signatureFormField;
@@ -303,6 +297,8 @@ void _showSignaturePadDialog(
     BuildContext context, PdfSignatureFormFieldHelper signatureFieldHelper) {
   _addColors();
   _isSignatureDrawn = false;
+  final SfLocalizations localizations = SfLocalizations.of(context);
+  final ThemeData themeData = Theme.of(context);
   showDialog<Widget>(
     barrierDismissible: false,
     context: context,
@@ -323,9 +319,7 @@ void _showSignaturePadDialog(
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text(
-                      signatureFieldHelper
-                          .localizations!.pdfSignaturePadDialogHeaderTextLabel,
+                  Text(localizations.pdfSignaturePadDialogHeaderTextLabel,
                       style: Theme.of(context).textTheme.titleMedium!.copyWith(
                             fontSize: 16,
                             fontFamily: 'Roboto-Medium',
@@ -378,8 +372,7 @@ void _showSignaturePadDialog(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           Text(
-                            signatureFieldHelper.localizations!
-                                .pdfSignaturePadDialogPenColorLabel,
+                            localizations.pdfSignaturePadDialogPenColorLabel,
                             style: Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
@@ -419,13 +412,11 @@ void _showSignaturePadDialog(
                           });
                         },
                   child: Text(
-                    signatureFieldHelper
-                        .localizations!.pdfSignaturePadDialogClearLabel,
+                    localizations.pdfSignaturePadDialogClearLabel,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 14,
                           fontFamily: 'Roboto-Medium',
-                          color: signatureFieldHelper
-                              .themeData!.colorScheme.primary,
+                          color: themeData.colorScheme.primary,
                         ),
                   ),
                 ),
@@ -445,12 +436,10 @@ void _showSignaturePadDialog(
                           }
                         },
                   child: Text(
-                    signatureFieldHelper
-                        .localizations!.pdfSignaturePadDialogSaveLabel,
+                    localizations.pdfSignaturePadDialogSaveLabel,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 14,
-                          color: signatureFieldHelper
-                              .themeData!.colorScheme.primary,
+                          color: themeData.colorScheme.primary,
                           fontFamily: 'Roboto-Medium',
                         ),
                   ),
